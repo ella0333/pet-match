@@ -9,6 +9,7 @@ import json
 import re
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
@@ -28,7 +29,9 @@ def get(url, **kw):
         r = requests.get(url, headers=HEADERS, timeout=60, **kw)
         if r.status_code != 429:
             return r
-        time.sleep(int(r.headers.get("Retry-After", 0)) or 10 * (attempt + 1))
+        wait = min(30, int(r.headers.get("Retry-After", 0)) or 10 * (attempt + 1))
+        print(f"  rate limited, waiting {wait}s", flush=True)
+        time.sleep(wait)
     return r
 
 
@@ -95,6 +98,7 @@ def main():
             pet_id = f"{species}-{slug(cat.split(':', 1)[1])}"
             if pet_id in done:
                 continue
+            print(f"checking {cat}", flush=True)
             files = files_in(cat)
             if len(files) < MIN_PHOTOS:
                 continue
@@ -102,7 +106,7 @@ def main():
             pet_dir.mkdir(exist_ok=True)
             saved = 0
             for f in files[:PHOTOS_PER_PET]:
-                ext = Path(f["thumb"]).suffix.lower() or ".jpg"
+                ext = Path(urlparse(f["thumb"]).path).suffix.lower() or ".jpg"
                 dest = pet_dir / f"{saved + 1}{ext}"
                 r = get(f["thumb"])
                 if not r.ok:
