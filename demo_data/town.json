@@ -1,0 +1,29 @@
+{
+  "_note": "Fictional town for the demo. Coordinates only drive distance math.",
+  "town": {"name": "Alder Falls", "lat": 45.000, "lon": -100.000},
+  "places": {
+    "Alder Falls": {"lat": 45.000, "lon": -100.000, "kind": "city"},
+    "Old Mill": {"lat": 45.012, "lon": -100.018, "kind": "neighbourhood"},
+    "Riverside": {"lat": 44.994, "lon": -99.982, "kind": "neighbourhood"},
+    "Cedar Heights": {"lat": 45.025, "lon": -99.995, "kind": "neighbourhood"},
+    "Downtown": {"lat": 45.001, "lon": -100.002, "kind": "neighbourhood"},
+    "Fernwood": {"lat": 44.978, "lon": -100.025, "kind": "neighbourhood"},
+    "Lark Hill": {"lat": 45.035, "lon": -100.040, "kind": "neighbourhood"},
+    "Southgate": {"lat": 44.962, "lon": -99.998, "kind": "neighbourhood"},
+    "Birch Hollow": {"lat": 45.048, "lon": -99.960, "kind": "neighbourhood"},
+    "Millbrook": {"lat": 45.110, "lon": -100.090, "kind": "city"},
+    "Granite Point": {"lat": 44.880, "lon": -99.900, "kind": "city"},
+    "Pine Street": {"lat": 45.013, "lon": -100.015, "kind": "street"},
+    "Willow Lane": {"lat": 44.995, "lon": -99.979, "kind": "street"},
+    "Harbor Road": {"lat": 44.990, "lon": -99.975, "kind": "street"},
+    "Maple Avenue": {"lat": 45.024, "lon": -99.997, "kind": "street"},
+    "Church Street": {"lat": 45.002, "lon": -100.004, "kind": "street"},
+    "Oak Crescent": {"lat": 44.979, "lon": -100.022, "kind": "street"},
+    "Summit Drive": {"lat": 45.036, "lon": -100.043, "kind": "street"},
+    "Station Road": {"lat": 44.963, "lon": -99.995, "kind": "street"},
+    "Hollow Way": {"lat": 45.047, "lon": -99.963, "kind": "street"},
+    "Alder Falls Park": {"lat": 45.006, "lon": -99.990, "kind": "street"},
+    "Fernwood School": {"lat": 44.977, "lon": -100.028, "kind": "address"},
+    "Riverside Market": {"lat": 44.993, "lon": -99.984, "kind": "address"}
+  }
+}

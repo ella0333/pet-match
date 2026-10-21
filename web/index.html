@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lost and Found Pets (concept)</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="paw">&#128062;</span> Lost and Found Pets</div>
+  <div class="concept">Concept feature mockup. Matching is live; groups are simulated.</div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a href="#feed" data-view="feed">&#127968; Nearby posts</a>
+    <a href="#report" data-view="report">&#128221; Report a lost or found pet</a>
+    <a href="#notifications" data-view="notifications">&#128276; Notifications <span id="notif-count" class="badge hidden"></span></a>
+    <a href="#groups" data-view="groups">&#128101; Participating groups</a>
+  </nav>
+
+  <main id="view"></main>
+</div>
+
+<div id="modal" class="modal hidden" role="dialog">
+  <div class="modal-card">
+    <div id="modal-body"></div>
+    <button class="btn" id="modal-close">Close</button>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

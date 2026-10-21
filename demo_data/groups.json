@@ -1,0 +1,10 @@
+[
+  {"id": "alder-falls-lost-found", "name": "Alder Falls Lost and Found Pets", "area": "Alder Falls", "members": 8400, "opted_in": true},
+  {"id": "old-mill-neighbours", "name": "Old Mill Neighbours", "area": "Old Mill, Alder Falls", "members": 2100, "opted_in": true},
+  {"id": "riverside-community", "name": "Riverside Community Board", "area": "Riverside, Alder Falls", "members": 3300, "opted_in": true},
+  {"id": "cedar-heights-pets", "name": "Cedar Heights Pet Owners", "area": "Cedar Heights, Alder Falls", "members": 1250, "opted_in": true},
+  {"id": "fernwood-parents", "name": "Fernwood Parents and Neighbours", "area": "Fernwood, Alder Falls", "members": 2900, "opted_in": true},
+  {"id": "millbrook-lost-dogs", "name": "Millbrook Lost Dogs", "area": "Millbrook", "members": 960, "opted_in": true},
+  {"id": "granite-point-cats", "name": "Granite Point Cat Network", "area": "Granite Point", "members": 1800, "opted_in": true},
+  {"id": "southgate-buy-sell", "name": "Southgate Buy, Sell and Lost Pets", "area": "Southgate, Alder Falls", "members": 4700, "opted_in": false}
+]

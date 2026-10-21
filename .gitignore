@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+data/
+demo_data/fetch.log
+demo_data/my_pets/
+modal_login.log
