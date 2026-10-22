@@ -16,8 +16,15 @@ import requests
 API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "pet-match-demo/0.1 (hackathon demo dataset)"}
 OUT = Path(__file__).parent / "photos"
-ROOTS = {"cat": "Category:Individual cats", "dog": "Category:Individual dogs"}
-SKIP_ROOT = ("Famous", "Fictional", "Wikipedians")
+ROOTS = {
+    "cat": ["Category:Individual cats", "Category:Cats of Wikipedians"],
+    "dog": ["Category:Individual dogs", "Category:Dogs of Wikipedians",
+            "Category:Dogs of Wikipedians in Baden-Württemberg",
+            "Category:Dogs by named individual owners",
+            "Category:German Shepherd Dog by name", "Category:Assistance dogs by name"],
+}
+SKIP_ROOT = ("Famous", "Fictional", "Wikipedians", "by name", "by named")
+CURATION = json.loads((Path(__file__).parent / "curation.json").read_text(encoding="utf-8"))
 OK_LICENSE = re.compile(r"^(CC0|Public domain|PD|CC BY(-SA)? \d)", re.I)
 PHOTOS_PER_PET = 4
 MIN_PHOTOS = 3
@@ -90,9 +97,11 @@ def main():
     credits_path = OUT / "credits.json"
     credits = json.loads(credits_path.read_text(encoding="utf-8")) if credits_path.exists() else []
     done = {c["pet"] for c in credits}
-    for species, root in ROOTS.items():
+    done |= set(CURATION["drop_pets"])
+    for species, roots in ROOTS.items():
         kept = len({c["pet"] for c in credits if c["species"] == species})
-        for cat in single_animal_cats(root):
+        cats = [c for root in roots for c in single_animal_cats(root)]
+        for cat in cats:
             if kept >= PETS_PER_SPECIES:
                 break
             pet_id = f"{species}-{slug(cat.split(':', 1)[1])}"

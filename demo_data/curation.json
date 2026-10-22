@@ -1,0 +1,17 @@
+{
+  "_note": "Pets and photos removed after looking at them: archive scans, contact sheets, artwork, collages, duplicates, or a second animal in the shot.",
+  "drop_pets": [
+    "cat-eros-cat", "cat-loki-cat", "cat-nanouk-cat", "cat-miss-truffles-cat",
+    "cat-rum-tum-tugger-red-tabby-cat",
+    "dog-bo-dog", "dog-buckeye-dog", "dog-ch-inglehurst-gillette", "dog-charlie-dog",
+    "dog-checkers-dog", "dog-clipper-dog", "dog-duffy-dog", "dog-fido-dog", "dog-freebo-dog",
+    "dog-grits-dog", "dog-king-timahoe", "dog-king-tut-dog", "dog-liberty-dog", "dog-m-dor-dog",
+    "dog-misty-dog", "dog-monk-dog", "dog-negro-matapacos", "dog-oh-boy-dog"
+  ],
+  "drop_photos": [
+    "cat-alpha-cat/4.jpg", "cat-caramel-red-tabby-cat/4.jpg", "cat-doraemon-cat/4.jpg",
+    "cat-george-de-jolival/3.jpg", "cat-prickles-asian-cat/1.jpg", "cat-prickles-asian-cat/4.jpg",
+    "dog-andromeda-galaktika/2.jpg", "dog-buddy-dog/4.jpg", "dog-millie-dog-of-ronald-reagan/3.jpg",
+    "dog-jerry-von-der-hohen-mark/2.jpg"
+  ]
+}

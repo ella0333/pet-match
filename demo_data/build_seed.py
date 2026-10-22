@@ -137,6 +137,8 @@ def main():
             role = "found_before_lost"
         if i == 1:
             role = "off_group"
+        if len(files) < 2:
+            role = "lost_only"
 
         split = max(1, len(files) // 2)
         lost_files, found_files = files[:split], files[split:]
