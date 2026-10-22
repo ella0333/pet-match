@@ -41,7 +41,7 @@ FIRST = ["Jordan", "Sam", "Riley", "Casey", "Morgan", "Avery", "Quinn", "Jamie",
 LAST = "ABCDEFGHJKLMNPRSTVWY"
 
 LOST_TEMPLATES = [
-    "PLEASE SHARE. Our {species} {name} slipped out on {day} near {where}. {pronoun_cap} is friendly but nervous with strangers. Please check sheds and garages!",
+    "PLEASE SHARE. Our {species} {name} slipped out {day} near {where}. {pronoun_cap} is friendly but nervous with strangers. Please check sheds and garages!",
     "Missing since {day}: {name}, {age}. Last seen around {where}. We're heartbroken, any sightings at all please message me.",
     "Lost {species} in {area}. {name} got out through the back gate {day}. {pronoun_cap} answers to {name} and loves treats. Reward for safe return.",
     "Has anyone seen {name}? Went missing {day} from our place on {where}. Not microchipped. Photos attached, please keep an eye out.",

@@ -25,11 +25,11 @@ PETS_PER_SPECIES = 25
 
 
 def get(url, **kw):
-    for attempt in range(6):
+    for attempt in range(20):
         r = requests.get(url, headers=HEADERS, timeout=60, **kw)
         if r.status_code != 429:
             return r
-        wait = min(30, int(r.headers.get("Retry-After", 0)) or 10 * (attempt + 1))
+        wait = min(60, int(r.headers.get("Retry-After", 0)) or 10 * (attempt + 1))
         print(f"  rate limited, waiting {wait}s", flush=True)
         time.sleep(wait)
     return r
@@ -115,7 +115,7 @@ def main():
                 credits.append({"pet": pet_id, "species": species,
                                 "file": dest.relative_to(OUT).as_posix(), **f})
                 saved += 1
-                time.sleep(1)
+                time.sleep(3)
             if saved >= MIN_PHOTOS:
                 kept += 1
                 print(f"{pet_id}: {saved} photos")
