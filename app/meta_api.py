@@ -20,6 +20,16 @@ def client() -> OpenAI:
     return _client
 
 
+def _log_usage(model: str, resp):
+    """Append token counts per call to data/usage.jsonl to track credit spend."""
+    u = getattr(resp, "usage", None)
+    row = {"model": model,
+           "input": getattr(u, "input_tokens", None),
+           "output": getattr(u, "output_tokens", None)}
+    with open(config.DATA / "usage.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+
+
 def data_url(image_bytes: bytes) -> str:
     mime = "image/png" if image_bytes[:4] == b"\x89PNG" else "image/jpeg"
     return f"data:{mime};base64,{base64.b64encode(image_bytes).decode()}"
@@ -44,6 +54,7 @@ def find_pet_boxes(image_bytes: bytes, species: str) -> list[tuple[int, int, int
             _image_part(image_bytes),
         ]}],
     )
+    _log_usage(config.SAM_MODEL, resp)
     width, height = Image.open(io.BytesIO(image_bytes)).size
     boxes = []
     for x1, y1, x2, y2, w, h in BOX.findall(resp.output_text or ""):
@@ -79,6 +90,7 @@ def _structured(prompt: str, images: list[bytes], name: str, schema: dict) -> di
         input=[{"type": "message", "role": "user", "content": content}],
         text={"format": {"type": "json_schema", "name": name, "schema": schema, "strict": True}},
     )
+    _log_usage(config.CHAT_MODEL, resp)
     return json.loads(resp.output_text)
 
 
