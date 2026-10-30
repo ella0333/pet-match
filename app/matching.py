@@ -7,6 +7,7 @@
    the final order and its reasons are shown to the user.
 """
 import math
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 import numpy as np
@@ -146,8 +147,11 @@ def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP,
     results.sort(key=lambda r: r["combined"], reverse=True)
     results = results[:top]
     if rerank:
-        for r in results:
-            v = verdict_for(me, r["post"], allow_new)
+        # The checks are independent, so run them together to keep a search
+        # to the time of one Muse Spark call.
+        with ThreadPoolExecutor(max_workers=RERANK_TOP) as pool_:
+            verdicts = list(pool_.map(lambda r: verdict_for(me, r["post"], allow_new), results))
+        for r, v in zip(results, verdicts):
             if v:
                 r["verdict"] = v
         results.sort(key=lambda r: ("verdict" in r,
