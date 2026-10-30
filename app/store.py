@@ -57,6 +57,13 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TEXT NOT NULL,
     UNIQUE (post_id, match_post_id)
 );
+CREATE TABLE IF NOT EXISTS actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    visitor TEXT NOT NULL,
+    ip TEXT NOT NULL
+);
 """
 
 
@@ -206,6 +213,52 @@ def notifications(limit: int = 30) -> list[dict]:
                 JOIN posts p ON p.id = n.post_id ORDER BY n.created_at DESC, n.id DESC
                 LIMIT ?""", (limit,))
     return [dict(r) for r in rows]
+
+
+def log_action(day: str, kind: str, visitor: str, ip: str):
+    run("INSERT INTO actions (day, kind, visitor, ip) VALUES (?, ?, ?, ?)",
+        (day, kind, visitor, ip))
+
+
+def action_counts(day: str, kind: str, visitor: str, ip: str) -> tuple[int, int]:
+    """(count for this visitor by browser or IP, count for everyone) today."""
+    mine = q("""SELECT COUNT(*) AS n FROM actions WHERE day = ? AND kind = ?
+                AND (visitor = ? OR ip = ?)""", (day, kind, visitor, ip))[0]["n"]
+    everyone = q("SELECT COUNT(*) AS n FROM actions WHERE day = ? AND kind = ?",
+                 (day, kind))[0]["n"]
+    return mine, everyone
+
+
+def snapshot():
+    """Save the freshly seeded database so the demo can be reset to it."""
+    with _lock:
+        _db.commit()
+        dest = sqlite3.connect(config.SNAPSHOT_PATH)
+        _db.backup(dest)
+        dest.close()
+
+
+def restore_snapshot():
+    """Put the demo back to its seeded state; the cap counters are kept."""
+    global _db
+    with _lock:
+        actions = _db.execute("SELECT day, kind, visitor, ip FROM actions").fetchall()
+        _db.close()
+        src = sqlite3.connect(config.SNAPSHOT_PATH)
+        _db = connect()
+        src.backup(_db)
+        src.close()
+        _db.executescript(SCHEMA)
+        _db.execute("DELETE FROM actions")
+        _db.executemany("INSERT INTO actions (day, kind, visitor, ip) VALUES (?, ?, ?, ?)",
+                        [tuple(a) for a in actions])
+        _db.commit()
+        max_id = _db.execute("SELECT COALESCE(MAX(id), 0) FROM posts").fetchone()[0]
+    for folder in config.UPLOADS.iterdir():
+        if folder.is_dir() and folder.name.isdigit() and int(folder.name) > max_id:
+            for f in folder.iterdir():
+                f.unlink()
+            folder.rmdir()
 
 
 def reset():

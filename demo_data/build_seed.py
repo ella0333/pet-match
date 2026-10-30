@@ -42,14 +42,14 @@ LAST = "ABCDEFGHJKLMNPRSTVWY"
 
 LOST_TEMPLATES = [
     "PLEASE SHARE. Our {species} {name} slipped out {day} near {where}. {pronoun_cap} is friendly but nervous with strangers. Please check sheds and garages!",
-    "Missing since {day}: {name}, {age}. Last seen around {where}. We're heartbroken, any sightings at all please message me.",
+    "Went missing {day}: {name}, {age}. Last seen around {where}. We're heartbroken, any sightings at all please message me.",
     "Lost {species} in {area}. {name} got out through the back gate {day}. {pronoun_cap} answers to {name} and loves treats. Reward for safe return.",
     "Has anyone seen {name}? Went missing {day} from our place on {where}. Not microchipped. Photos attached, please keep an eye out.",
     "{name} didn't come home {day}. We live just off {where}. {pronoun_cap} has never been gone this long. Please share to local groups!",
 ]
 FOUND_TEMPLATES = [
     "FOUND: {species} wandering near {where} {day}. Seems well cared for, no tag. Keeping {pronoun_obj} safe inside for now, owner please get in touch.",
-    "This {species} has been hanging around our yard in {area} since {day}. Very friendly, looks like someone's pet. Does anyone recognise?",
+    "This {species} has been hanging around our yard in {area}, first showed up {day}. Very friendly, looks like someone's pet. Does anyone recognise?",
     "Found {day} by {where}. No collar. Took {pronoun_obj} to get scanned, no microchip. Posting here hoping the owner sees it.",
     "Spotted this {species} near {where} {day} and managed to catch {pronoun_obj}. Is this your pet? Message me with a photo to claim.",
     "Found {species} in {area}, {day}. Clearly lost and hungry. Currently with us, please share so the owner can find {pronoun_obj}.",
@@ -152,18 +152,29 @@ def main():
             posts.append(make_post("found", pet_id, species, ["photos/" + f["file"] for f in found_files],
                                    found_files, group, found_where, found_area, found_day, used))
 
-    # Gabriella's own photos: demo_data/my_pets/<name>/*.jpg become one more
-    # lost post each; write their found post by hand in seed_posts.json.
+    # Gabriella's own cats: demo_data/my_pets/<Name>_01.jpg and so on. The
+    # first photo is the lost post, the rest the found post. Both cats go
+    # missing in the same area a day apart, so only the photos can tell
+    # the two grey tabbies apart.
     if MY_PETS.exists():
-        for folder in sorted(p for p in MY_PETS.iterdir() if p.is_dir()):
-            files = sorted(str(f.relative_to(PHOTOS.parent).as_posix())
-                           for f in folder.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png"))
-            if files:
-                posts.append({"post_type": "lost", "group_id": "alder-falls-lost-found",
-                              "text": f"Our cat {folder.name.capitalize()} is missing. Please share!",
-                              "photos": files, "credits": [None] * len(files),
-                              "demo_pet": f"mine-{folder.name}",
-                              "created_at": f"{TODAY.isoformat()}T09:00:00", **person(used)})
+        mine: dict[str, list[str]] = {}
+        for f in sorted(MY_PETS.rglob("*")):
+            if f.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                name = f.parent.name if f.parent != MY_PETS else f.stem.split("_")[0]
+                mine.setdefault(name.lower(), []).append(f.relative_to(HERE).as_posix())
+        lost_day = TODAY - timedelta(days=5)
+        for k, (name, files) in enumerate(sorted(mine.items())):
+            if len(files) < 2:
+                continue
+            pet_id = f"cat-{name}"
+            day = lost_day + timedelta(days=k)
+            posts.append(make_post("lost", pet_id, "cat", files[:1], [None],
+                                   "alder-falls-lost-found", "Summit Drive, Lark Hill",
+                                   "Lark Hill", day, used))
+            posts.append(make_post("found", pet_id, "cat", files[1:], [None] * (len(files) - 1),
+                                   random.choice(["old-mill-neighbours", "cedar-heights-pets"]),
+                                   random.choice(["Pine Street", "Maple Avenue"]), "Old Mill",
+                                   day + timedelta(days=2), used))
 
     posts.sort(key=lambda p: p["created_at"])
     (HERE / "seed_posts.json").write_text(json.dumps(posts, indent=2), encoding="utf-8")

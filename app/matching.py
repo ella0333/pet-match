@@ -113,19 +113,22 @@ def score_pair(a: dict, b: dict, emb_a: np.ndarray, emb_b: np.ndarray) -> dict:
 
 
 def _crop_bytes(post_id: int) -> list[bytes]:
-    return [(config.ROOT / p["crop_path"]).read_bytes() for p in store.photos(post_id)]
+    return [(config.DATA / p["crop_path"]).read_bytes() for p in store.photos(post_id)]
 
 
-def verdict_for(a: dict, b: dict) -> dict:
+def verdict_for(a: dict, b: dict, allow_new: bool = True) -> dict | None:
     cached = store.cached_verdict(a["id"], b["id"])
-    if cached:
+    if cached or not allow_new:
         return cached
     v = meta_api.compare_posts(a, b, _crop_bytes(a["id"]), _crop_bytes(b["id"]))
     store.save_verdict(a["id"], b["id"], v)
     return v
 
 
-def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP) -> list[dict]:
+def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP,
+                 allow_new: bool = True) -> list[dict]:
+    """Ranked candidates. With allow_new off, only saved Muse Spark checks are
+    used, so the search makes no paid calls."""
     me = store.post(post_id)
     if me is None:
         return []
@@ -144,9 +147,12 @@ def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP) -> li
     results = results[:top]
     if rerank:
         for r in results:
-            r["verdict"] = verdict_for(me, r["post"])
-        results.sort(key=lambda r: (r["verdict"]["same_pet_likelihood"], r["combined"]),
-                     reverse=True)
+            v = verdict_for(me, r["post"], allow_new)
+            if v:
+                r["verdict"] = v
+        results.sort(key=lambda r: ("verdict" in r,
+                                    r["verdict"]["same_pet_likelihood"] if "verdict" in r else 0,
+                                    r["combined"]), reverse=True)
     return results
 
 

@@ -2,17 +2,68 @@
 
 Run with: python -m uvicorn app.main:app --port 8040
 """
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+import io
+import uuid
+from datetime import date
+
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+from PIL import Image
 from pydantic import BaseModel
 
-from . import config, ingest, matching, store
+from . import config, ingest, matching, meta_api, store
 
 app = FastAPI(title="Pet Match")
 WEB = config.ROOT / "web"
 app.mount("/static", StaticFiles(directory=WEB), name="static")
-app.mount("/data", StaticFiles(directory=config.DATA), name="data")
+# Only the photos are served; the database and usage log stay private.
+app.mount("/data/uploads", StaticFiles(directory=config.UPLOADS), name="uploads")
+
+# Called after anything that writes, so the hosted app can persist its volume.
+after_write = lambda: None  # noqa: E731
+
+VISITOR_COOKIE = "pm_visitor"
+
+
+def _visitor(request: Request, response: Response) -> tuple[str, str]:
+    visitor = request.cookies.get(VISITOR_COOKIE)
+    if not visitor:
+        visitor = uuid.uuid4().hex
+        response.set_cookie(VISITOR_COOKIE, visitor, max_age=60 * 60 * 24 * 30,
+                            httponly=True, samesite="lax")
+    forwarded = request.headers.get("x-forwarded-for", "")
+    ip = forwarded.split(",")[0].strip() or (request.client.host if request.client else "")
+    return visitor, ip
+
+
+def _over_budget() -> bool:
+    return config.HOSTED and meta_api.hosted_spend() >= config.SPEND_CEILING_USD
+
+
+def _check_post_caps(visitor: str, ip: str):
+    if not config.HOSTED:
+        return
+    if _over_budget():
+        raise HTTPException(429, "The demo has reached its spending limit, so new posts are "
+                                 "switched off. You can still browse and search.")
+    mine, everyone = store.action_counts(date.today().isoformat(), "post", visitor, ip)
+    if mine >= config.POSTS_PER_VISITOR_PER_DAY:
+        raise HTTPException(429, f"You've added {mine} posts today, which is the daily "
+                                 "limit for this demo. You can still browse and search.")
+    if everyone >= config.POSTS_PER_DAY:
+        raise HTTPException(429, "The demo has had as many new posts as it allows today. "
+                                 "You can still browse and search.")
+
+
+def _may_spend_on_search(visitor: str, ip: str) -> bool:
+    if not config.HOSTED:
+        return True
+    if _over_budget():
+        return False
+    mine, everyone = store.action_counts(date.today().isoformat(), "search", visitor, ip)
+    return mine < config.NEW_SEARCHES_PER_VISITOR_PER_DAY and everyone < config.NEW_SEARCHES_PER_DAY
 
 
 def _group_names() -> dict:
@@ -30,7 +81,7 @@ def post_view(p: dict, names: dict | None = None) -> dict:
         "group": names.get(p["group_id"], "Posted in Lost and Found Pets"),
         "contact": {"messenger": p["contact_messenger"], "phone": p["contact_phone"],
                     "email": p["contact_email"]},
-        "photos": [{"url": "/" + ph["path"], "crop": "/" + ph["crop_path"],
+        "photos": [{"url": "/data/" + ph["path"], "crop": "/data/" + ph["crop_path"],
                     "credit": ph["credit"]} for ph in store.photos(p["id"])],
     }
 
@@ -62,7 +113,17 @@ class OptIn(BaseModel):
 @app.post("/api/groups/{group_id}/opt-in")
 def opt_in(group_id: str, body: OptIn):
     store.set_opt_in(group_id, body.opted_in)
+    after_write()
     return store.groups()
+
+
+@app.post("/api/reset")
+def reset_demo():
+    if not config.SNAPSHOT_PATH.exists():
+        raise HTTPException(404, "No saved demo to reset to.")
+    store.restore_snapshot()
+    after_write()
+    return {"ok": True}
 
 
 @app.get("/api/feed")
@@ -80,25 +141,63 @@ def get_post(post_id: int):
 
 
 @app.get("/api/posts/{post_id}/matches")
-def get_matches(post_id: int, rerank: bool = True):
+def get_matches(post_id: int, request: Request, response: Response):
     if store.post(post_id) is None:
         raise HTTPException(404)
+    visitor, ip = _visitor(request, response)
+    allow_new = _may_spend_on_search(visitor, ip)
+    before = store.q("SELECT COUNT(*) AS n FROM verdicts")[0]["n"]
+    results = matching.find_matches(post_id, allow_new=allow_new)
+    if store.q("SELECT COUNT(*) AS n FROM verdicts")[0]["n"] > before:
+        store.log_action(date.today().isoformat(), "search", visitor, ip)
+        after_write()
     names = _group_names()
-    return [match_view(r, names) for r in matching.find_matches(post_id, rerank=rerank)]
+    return [match_view(r, names) for r in results]
 
 
 @app.post("/api/posts")
-async def create_post(text: str = Form(...), post_type: str = Form(...),
+async def create_post(request: Request, response: Response,
+                      text: str = Form(...), post_type: str = Form(...),
                       poster: str = Form("You"), messenger: str = Form(""),
                       phone: str = Form(""), email: str = Form(""),
                       photos: list[UploadFile] = File(...)):
-    images = [await f.read() for f in photos if f.filename]
-    if not images:
+    visitor, ip = _visitor(request, response)
+    _check_post_caps(visitor, ip)
+    if post_type not in ("lost", "found"):
+        raise HTTPException(400, "Choose lost or found.")
+    files = [f for f in photos if f.filename]
+    if not files:
         raise HTTPException(400, "Add at least one photo.")
-    post_id = ingest.ingest_post(text, images[:6], poster, post_type=post_type,
-                                 contact_messenger=messenger, contact_phone=phone,
-                                 contact_email=email)
+    if len(files) > config.MAX_PHOTOS:
+        raise HTTPException(400, f"Add up to {config.MAX_PHOTOS} photos.")
+    images = []
+    for f in files:
+        data = await f.read(config.MAX_PHOTO_BYTES + 1)
+        if len(data) > config.MAX_PHOTO_BYTES:
+            raise HTTPException(400, "Each photo can be up to 10 MB.")
+        try:
+            Image.open(io.BytesIO(data)).verify()
+        except Exception:
+            raise HTTPException(400, "One of the files isn't a photo we can read.")
+        images.append(data)
+    store.log_action(date.today().isoformat(), "post", visitor, ip)
+    post_id = await run_in_threadpool(
+        ingest.ingest_post, text[:2000], images, poster[:60] or "You", post_type=post_type,
+        contact_messenger=messenger[:80], contact_phone=phone[:40], contact_email=email[:120])
+    after_write()
     return {"id": post_id}
+
+
+@app.get("/api/limits")
+def limits(request: Request, response: Response):
+    visitor, ip = _visitor(request, response)
+    today = date.today().isoformat()
+    mine, everyone = store.action_counts(today, "post", visitor, ip)
+    return {"hosted": config.HOSTED,
+            "posts_left_today": max(0, config.POSTS_PER_VISITOR_PER_DAY - mine)
+            if config.HOSTED else None,
+            "posting_open": not config.HOSTED or (not _over_budget()
+                                                   and everyone < config.POSTS_PER_DAY)}
 
 
 @app.get("/api/notifications")

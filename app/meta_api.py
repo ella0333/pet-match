@@ -20,14 +20,34 @@ def client() -> OpenAI:
     return _client
 
 
+def call_cost(row: dict) -> float:
+    if row["model"] == config.SAM_MODEL:
+        return config.PRICE_SAM_PER_IMAGE
+    return ((row.get("input") or 0) * config.PRICE_INPUT_PER_TOKEN
+            + (row.get("output") or 0) * config.PRICE_OUTPUT_PER_TOKEN)
+
+
 def _log_usage(model: str, resp):
-    """Append token counts per call to data/usage.jsonl to track credit spend."""
+    """Append token counts per call to usage.jsonl to track credit spend."""
     u = getattr(resp, "usage", None)
     row = {"model": model,
            "input": getattr(u, "input_tokens", None),
-           "output": getattr(u, "output_tokens", None)}
-    with open(config.DATA / "usage.jsonl", "a", encoding="utf-8") as f:
+           "output": getattr(u, "output_tokens", None),
+           "hosted": config.HOSTED}
+    with open(config.USAGE_PATH, "a", encoding="utf-8") as f:
         f.write(json.dumps(row) + "\n")
+
+
+def hosted_spend() -> float:
+    """Dollars spent by the public demo, not counting the seeding run."""
+    if not config.USAGE_PATH.exists():
+        return 0.0
+    total = 0.0
+    for line in config.USAGE_PATH.read_text(encoding="utf-8").splitlines():
+        row = json.loads(line)
+        if row.get("hosted"):
+            total += call_cost(row)
+    return total
 
 
 def data_url(image_bytes: bytes) -> str:

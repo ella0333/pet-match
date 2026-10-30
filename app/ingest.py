@@ -1,7 +1,21 @@
 """Turn a raw post (text, photos, contact details) into an indexed post."""
+import io
 from datetime import datetime
 
+from PIL import Image, ImageOps
+
 from . import config, embed, geo, matching, meta_api, store
+
+MAX_SIDE = 1280
+
+
+def normalise(image_bytes: bytes) -> bytes:
+    """Shrink to MAX_SIDE and re-encode, which also drops EXIF and GPS data."""
+    img = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes))).convert("RGB")
+    img.thumbnail((MAX_SIDE, MAX_SIDE))
+    out = io.BytesIO()
+    img.save(out, "JPEG", quality=88)
+    return out.getvalue()
 
 
 def ingest_post(text: str, images: list[bytes], poster: str, *,
@@ -12,6 +26,7 @@ def ingest_post(text: str, images: list[bytes], poster: str, *,
                 credits: list[dict | None] | None = None, notify: bool = True) -> int:
     created_at = created_at or datetime.now().isoformat(timespec="seconds")
     today = today or created_at[:10]
+    images = [normalise(b) for b in images]
 
     fields = meta_api.read_post(text, images, posted=created_at[:10], today=today)
     if post_type in ("lost", "found"):
@@ -46,8 +61,8 @@ def ingest_post(text: str, images: list[bytes], poster: str, *,
         cropped = folder / f"{i + 1}_crop.jpg"
         original.write_bytes(img)
         cropped.write_bytes(crop)
-        store.add_photo(post_id, original.relative_to(config.ROOT).as_posix(),
-                        cropped.relative_to(config.ROOT).as_posix(), n, vec, credits[i])
+        store.add_photo(post_id, original.relative_to(config.DATA).as_posix(),
+                        cropped.relative_to(config.DATA).as_posix(), n, vec, credits[i])
 
     if notify:
         matching.notify_matches(post_id, created_at)

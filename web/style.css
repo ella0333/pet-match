@@ -31,6 +31,10 @@ body {
   border-radius: 999px; padding: 4px 10px;
 }
 
+.mock-banner {
+  background: #fff8e1; color: #5c4400; border-bottom: 1px solid #f0d98c;
+  padding: 10px 16px; font-size: 14px; text-align: center;
+}
 .layout { display: flex; gap: 24px; max-width: 1100px; margin: 0 auto; padding: 16px; }
 .sidebar { width: 260px; flex: none; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 72px; align-self: flex-start; }
 .sidebar a {

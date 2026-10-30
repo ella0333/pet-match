@@ -1,7 +1,8 @@
-__pycache__/
 *.pyc
 .env
+__pycache__/
 data/
 demo_data/fetch.log
 demo_data/my_pets/
+demo_data/seed_posts.json
 modal_login.log

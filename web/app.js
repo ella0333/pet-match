@@ -6,7 +6,11 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
-  if (!r.ok) throw new Error((await r.text()) || r.statusText);
+  if (!r.ok) {
+    let msg = r.statusText;
+    try { msg = (await r.json()).detail || msg; } catch { /* not JSON */ }
+    throw new Error(msg);
+  }
   return r.json();
 }
 
@@ -66,7 +70,7 @@ function matchCard(m) {
   return `<article class="card match">
     <div class="lead">${lead ? `<img src="${esc(lead.url)}" alt="">` : ""}</div>
     <div>
-      <div class="likelihood ${cls}">${pct}% likely the same pet</div>
+      <div class="likelihood ${cls}">${v ? `${pct}% likely the same pet` : `${pct}% similar by photo and details`}</div>
       ${v ? `<div>${esc(v.summary)}</div>
         <div class="chips">${v.matching_features.map((f) => `<span class="chip">${esc(f)}</span>`).join("")}
         ${v.conflicts.map((f) => `<span class="chip conflict">${esc(f)}</span>`).join("")}</div>` : ""}
@@ -119,7 +123,16 @@ function showReport() {
       </div></div>
     <div class="actions"><button class="btn primary" type="submit">Post and search</button>
       <span id="report-status" class="muted"></span></div>
+    <p id="limits" class="muted"></p>
   </form>`;
+  api("/api/limits").then((l) => {
+    if (!l.hosted) return;
+    const el = document.getElementById("limits");
+    if (!el) return;
+    el.textContent = l.posting_open
+      ? `To keep this public demo affordable, each visitor can add ${l.posts_left_today} more post${l.posts_left_today === 1 ? "" : "s"} today. Searching is unlimited.`
+      : "New posts are paused on this demo for today, but you can still browse and search every group.";
+  }).catch(() => {});
   document.getElementById("report-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -131,7 +144,7 @@ function showReport() {
       const { id } = await api("/api/posts", { method: "POST", body: new FormData(form) });
       location.hash = `#matches/${id}`;
     } catch (err) {
-      status.textContent = `Something went wrong: ${err.message}`;
+      status.textContent = err.message;
       btn.disabled = false;
     }
   });
@@ -173,7 +186,19 @@ async function showGroups() {
     ${groups.map((g) => `<div class="group-row">
       <div><h3>${esc(g.name)}</h3><div class="muted">${esc(g.area)} &middot; ${g.members.toLocaleString()} members &middot; ${g.posts} pet posts</div></div>
       <label class="switch"><input type="checkbox" data-group="${esc(g.id)}" ${g.opted_in ? "checked" : ""}><span></span></label>
-    </div>`).join("")}</div>`;
+    </div>`).join("")}</div>
+    <div class="card"><h3>Reset the demo</h3>
+      <p class="muted">Puts every group and post back the way the demo started, removing posts added by visitors.</p>
+      <button class="btn" id="reset-demo">Reset demo</button> <span id="reset-status" class="muted"></span></div>`;
+  document.getElementById("reset-demo").addEventListener("click", async () => {
+    const status = document.getElementById("reset-status");
+    status.textContent = "Resetting...";
+    try {
+      await api("/api/reset", { method: "POST" });
+      status.textContent = "Done.";
+      showGroups();
+    } catch (err) { status.textContent = err.message; }
+  });
   view.querySelectorAll("input[data-group]").forEach((box) =>
     box.addEventListener("change", () => api(`/api/groups/${box.dataset.group}/opt-in`, {
       method: "POST", headers: { "Content-Type": "application/json" },
