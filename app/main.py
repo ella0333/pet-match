@@ -21,6 +21,16 @@ app.mount("/static", StaticFiles(directory=WEB), name="static")
 # Only the demo post photos are served; the database and usage log stay private.
 app.mount("/data/uploads", StaticFiles(directory=config.UPLOADS), name="uploads")
 
+@app.middleware("http")
+async def no_stale_pages(request: Request, call_next):
+    """Make browsers check for a newer page and script on every visit, so a
+    redeploy shows up straight away instead of an old cached copy."""
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 # Called after anything that writes, so the hosted app can persist its volume.
 after_write = lambda: None  # noqa: E731
 
