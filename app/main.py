@@ -49,7 +49,11 @@ def _visitor(request: Request, response: Response) -> tuple[str, str]:
 
 
 def _over_budget() -> bool:
-    return config.HOSTED and meta_api.hosted_spend() >= config.SPEND_CEILING_USD
+    """True once the demo's padded spend estimate reaches the free credit left."""
+    if not config.HOSTED:
+        return False
+    spent = meta_api.hosted_spend() * config.SPEND_SAFETY_FACTOR
+    return spent >= config.CREDIT_LEFT_USD - config.CREDIT_BUFFER_USD
 
 
 def _search_counts(visitor: str, ip: str) -> tuple[int, int]:
@@ -60,7 +64,7 @@ def _check_search_caps(visitor: str, ip: str):
     if not config.HOSTED:
         return
     if _over_budget():
-        raise HTTPException(429, "The demo has reached its spending limit, so searching is "
+        raise HTTPException(429, "The demo has used up its free search credit, so searching is "
                                  "switched off. You can still browse nearby posts.")
     mine, everyone = _search_counts(visitor, ip)
     if mine >= config.SEARCHES_PER_VISITOR_PER_DAY:

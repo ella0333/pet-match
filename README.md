@@ -59,4 +59,4 @@ Store your Meta key as a Modal secret, upload the loaded data to a Modal volume,
     python -m modal volume put pet-match-data data/uploads /uploads
     python -m modal deploy modal_web.py
 
-Searches on the hosted demo are never saved. To limit spending, each visitor can run 5 searches a day, the site allows 80 a day, and searching switches off once the demo has spent 25 dollars of Meta credit (set PET_MATCH_SPEND_CEILING to change it). Browsing nearby posts and the opt-in demo are free.
+Searches on the hosted demo are never saved. To limit spending, each visitor can run 5 searches a day, the site allows 80 a day, and searching switches off before the free Meta credit runs out (set PET_MATCH_CREDIT_LEFT to the credit remaining when you deploy). Browsing nearby posts and the opt-in demo are free.

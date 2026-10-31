@@ -26,7 +26,12 @@ PRICE_SAM_PER_IMAGE = 2.50 / 1000
 HOSTED = os.environ.get("PET_MATCH_HOSTED") == "1"
 SEARCHES_PER_VISITOR_PER_DAY = 5
 SEARCHES_PER_DAY = 80
-SPEND_CEILING_USD = float(os.environ.get("PET_MATCH_SPEND_CEILING", "25"))
+# Searching stops before the free Meta credit runs out. The token log
+# undercounts what Meta bills by roughly 15 to 20 percent, so estimates are
+# padded, and a small buffer is kept on top.
+CREDIT_LEFT_USD = float(os.environ.get("PET_MATCH_CREDIT_LEFT", "147.55"))
+SPEND_SAFETY_FACTOR = 1.3
+CREDIT_BUFFER_USD = 5.0
 MAX_PHOTOS = 4
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
 
