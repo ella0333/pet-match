@@ -1,5 +1,7 @@
 # Pet Match
 
+Live demo: https://ella0333--pet-match-web-web.us-east.modal.run
+
 This is a mock integration showing how a lost and found pet search could work inside Facebook. It is not a real Facebook or Meta product. The groups, people and posts in the demo are simulated, and the photo matching is real.
 
 Today, finding a lost pet on Facebook means joining every local lost and found group and scrolling through each one. Pet Match lets groups opt in to a shared index. Anyone who lost or found a pet uploads a photo, and before posting they see the closest matches from every participating group without joining any of them, with a Message button to reach the poster. Phone numbers and emails are never shown.
