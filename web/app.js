@@ -159,12 +159,20 @@ async function showFeed() {
 
 async function showOptIn() {
   const g = await api("/api/opt-in-demo");
-  view.innerHTML = `<div class="card">
-      <div class="eyebrow">Opt-in demo: a group page as its admin sees it</div>
-      <h2>${esc(g.name)}</h2>
-      <div class="muted">${esc(g.area)} &middot; ${g.members.toLocaleString()} members</div>
+  view.innerHTML = `<div class="card group-header">
+      <div class="group-cover"></div>
+      <div class="group-title">
+        <div class="group-icon">&#128101;</div>
+        <div>
+          <div class="eyebrow">Facebook group &middot; Opt-in demo</div>
+          <h2>${esc(g.name)}</h2>
+          <div class="muted">Public group &middot; ${esc(g.area)} &middot; ${g.members.toLocaleString()} members</div>
+        </div>
+      </div>
+      <div class="group-tabs"><span class="active">Discussion</span><span>Members</span><span>Admin tools</span></div>
     </div>
     <div class="card">
+      <div class="eyebrow">Admin tools &middot; you're viewing this group as its admin</div>
       <div class="optin-row">
         <div><h3>Share lost and found posts with Lost and Found Pets</h3>
           <div class="muted">When this is on, anyone can find this group's lost and found pet posts in search and nearby posts without joining the group.</div></div>
@@ -172,6 +180,8 @@ async function showOptIn() {
       </div>
       <div id="opt-status" class="muted optin-status"></div>
     </div>
+    <div class="card"><h3>Posts in this group</h3>
+      <div class="muted">Only members see these unless the switch above is on.</div></div>
     ${g.posts.map(postCard).join("")}`;
   document.getElementById("opt-in").addEventListener("change", async (e) => {
     const status = document.getElementById("opt-status");
@@ -196,7 +206,7 @@ function openModal(html) {
 }
 
 async function route() {
-  const name = location.hash.slice(1) || "found";
+  const name = location.hash.slice(1) || "feed";
   document.querySelectorAll(".sidebar a[data-view]").forEach((a) =>
     a.classList.toggle("active", a.dataset.view === name));
   try {

@@ -144,3 +144,15 @@ input[type=file]::file-selector-button {
 #results { display: flex; flex-direction: column; gap: 16px; }
 #results:empty { display: none; }
 .card p.muted { margin: 6px 0 12px; }
+
+.group-header { padding: 0; overflow: hidden; }
+.group-cover { height: 120px; background: linear-gradient(135deg, #1877f2, #6aa8f7 60%, #c9defc); }
+.group-title { display: flex; align-items: flex-end; gap: 14px; padding: 0 16px 12px; margin-top: -32px; }
+.group-icon {
+  width: 72px; height: 72px; border-radius: 12px; background: var(--card); border: 4px solid var(--card);
+  display: grid; place-items: center; font-size: 34px; box-shadow: 0 1px 3px rgba(0,0,0,.2); flex: none;
+}
+.group-title h2 { margin: 2px 0; }
+.group-tabs { display: flex; gap: 4px; border-top: 1px solid var(--line); padding: 0 12px; }
+.group-tabs span { padding: 12px 10px; font-weight: 600; color: var(--muted); font-size: 14px; }
+.group-tabs span.active { color: var(--blue); box-shadow: inset 0 -3px 0 var(--blue); }
