@@ -83,7 +83,18 @@ form label { font-weight: 600; font-size: 14px; }
 input[type=text], input[type=email], input[type=tel], textarea {
   font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%;
 }
-textarea { min-height: 110px; resize: vertical; }
+textarea { min-height: 90px; resize: vertical; }
+input[type=file] {
+  font: inherit; width: 100%; padding: 14px; border: 2px dashed var(--line); border-radius: 8px;
+  background: var(--bg); cursor: pointer;
+}
+input[type=file]:hover { border-color: var(--blue); }
+input[type=file]::file-selector-button {
+  font: inherit; font-weight: 600; border: 0; border-radius: 6px; padding: 6px 12px; margin-right: 10px;
+  background: var(--blue); color: #fff; cursor: pointer;
+}
+.status { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.status:empty { display: none; }
 .toggle-type { display: flex; gap: 8px; }
 .toggle-type label { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; }
 .toggle-type input { display: none; }
@@ -105,10 +116,15 @@ textarea { min-height: 110px; resize: vertical; }
 .scores { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
 .bar { display: inline-block; width: 50px; height: 6px; background: var(--bg); border-radius: 3px; vertical-align: middle; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--blue); }
-.not-member { font-size: 12px; color: var(--blue); }
+.not-member { font-size: 12px; color: var(--blue); margin-top: 4px; }
+.match .likelihood + div { margin-top: 2px; }
+.match p { margin: 8px 0 0; }
 
-.group-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
-.group-row:first-of-type { border-top: 0; }
+.optin-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.optin-row .muted { margin-top: 4px; }
+.optin-status { margin-top: 10px; }
+.optin-status:empty { display: none; }
+.eyebrow { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
 .switch { position: relative; width: 44px; height: 24px; flex: none; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .switch span { position: absolute; inset: 0; background: #ccd0d5; border-radius: 999px; cursor: pointer; transition: .2s; }
@@ -121,4 +137,10 @@ textarea { min-height: 110px; resize: vertical; }
 
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 10; padding: 16px; }
 .modal-card { background: var(--card); border-radius: 10px; padding: 20px; max-width: 420px; width: 100%; }
+.modal-card h3 { margin-top: 0; }
+.modal-card .btn { margin-top: 8px; }
 .empty { text-align: center; color: var(--muted); padding: 32px 16px; }
+
+#results { display: flex; flex-direction: column; gap: 16px; }
+#results:empty { display: none; }
+.card p.muted { margin: 6px 0 12px; }

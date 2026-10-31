@@ -104,8 +104,8 @@ function showSearch(kind) {
       <textarea id="details" name="details" placeholder="${lost
         ? "For example: slipped out near Pine Street in Old Mill on Saturday, grey tabby with a white chest."
         : "For example: found near the park in Riverside this morning, no collar."}"></textarea></div>
-    <div class="actions"><button class="btn primary" type="submit">Search for matches</button>
-      <span id="search-status" class="muted"></span></div>
+    <div class="actions"><button class="btn primary" type="submit">Search for matches</button></div>
+    <div id="search-status" class="muted status"></div>
     <p id="limits" class="muted"></p>
   </form>
   <div id="results"></div>`;
@@ -160,16 +160,18 @@ async function showFeed() {
 async function showOptIn() {
   const g = await api("/api/opt-in-demo");
   view.innerHTML = `<div class="card">
-      <div class="muted">Opt-in demo: a group page as its admin sees it</div>
+      <div class="eyebrow">Opt-in demo: a group page as its admin sees it</div>
       <h2>${esc(g.name)}</h2>
       <div class="muted">${esc(g.area)} &middot; ${g.members.toLocaleString()} members</div>
     </div>
-    <div class="card group-row">
-      <div><h3>Share lost and found posts with Lost and Found Pets</h3>
-        <div class="muted">When this is on, anyone can find this group's lost and found pet posts in search and nearby posts without joining the group.</div></div>
-      <label class="switch"><input type="checkbox" id="opt-in" ${g.opted_in ? "checked" : ""}><span></span></label>
+    <div class="card">
+      <div class="optin-row">
+        <div><h3>Share lost and found posts with Lost and Found Pets</h3>
+          <div class="muted">When this is on, anyone can find this group's lost and found pet posts in search and nearby posts without joining the group.</div></div>
+        <label class="switch"><input type="checkbox" id="opt-in" ${g.opted_in ? "checked" : ""}><span></span></label>
+      </div>
+      <div id="opt-status" class="muted optin-status"></div>
     </div>
-    <div id="opt-status" class="muted"></div>
     ${g.posts.map(postCard).join("")}`;
   document.getElementById("opt-in").addEventListener("change", async (e) => {
     const status = document.getElementById("opt-status");

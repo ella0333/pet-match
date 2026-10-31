@@ -48,9 +48,9 @@ LOST_TEMPLATES = [
     "{name} didn't come home {day}. We live just off {where}. {pronoun_cap} has never been gone this long. Please share to local groups!",
 ]
 FOUND_TEMPLATES = [
-    "FOUND: {species} wandering near {where} {day}. Seems well cared for, no tag. Keeping {pronoun_obj} safe inside for now, owner please get in touch.",
+    "FOUND: {species} wandering near {where} {day}. Seems well cared for. Keeping {pronoun_obj} safe inside for now, owner please get in touch.",
     "This {species} has been hanging around our yard in {area}, first showed up {day}. Very friendly, looks like someone's pet. Does anyone recognise?",
-    "Found {day} by {where}. No collar. Took {pronoun_obj} to get scanned, no microchip. Posting here hoping the owner sees it.",
+    "Found {day} by {where}. Took {pronoun_obj} to get scanned, no microchip. Posting here hoping the owner sees it.",
     "Spotted this {species} near {where} {day} and managed to catch {pronoun_obj}. Is this your pet? Message me with a photo to claim.",
     "Found {species} in {area}, {day}. Clearly lost and hungry. Currently with us, please share so the owner can find {pronoun_obj}.",
 ]

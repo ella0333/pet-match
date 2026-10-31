@@ -16,7 +16,7 @@ PICKS = [
     ("try-with-i-found-a-pet", "cat-miyako-cat/3.jpg", "Miyako, posted as lost"),
     ("try-with-i-found-a-pet", "cat-caramel-red-tabby-cat/2.jpg", "Caramel, posted as lost"),
     ("try-with-i-found-a-pet", "cat-erik-the-cat-sk-lsk-r/3.jpg", "Erik, posted as lost"),
-    ("try-with-i-lost-a-pet", "dog-lola-dog/1.jpg", "Lola, posted as found"),
+    ("try-with-i-lost-a-pet", "dog-eddi-dog/1.jpg", "Eddi, posted as found"),
     ("try-with-i-lost-a-pet", "dog-madsen-the-dog-esbjerg/1.jpg", "Madsen, posted as found"),
     ("opt-in-demo-try-with-i-lost-a-pet", "cat-doraemon-cat/1.jpg",
      "Doraemon, posted as found in the Opt-in demo group, so it only matches once that group is switched on"),
