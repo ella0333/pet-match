@@ -126,17 +126,11 @@ def verdict_for(a: dict, b: dict, allow_new: bool = True) -> dict | None:
     return v
 
 
-def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP,
-                 allow_new: bool = True) -> list[dict]:
-    """Ranked candidates. With allow_new off, only saved Muse Spark checks are
-    used, so the search makes no paid calls."""
-    me = store.post(post_id)
-    if me is None:
-        return []
+def _rank(me: dict, mine: np.ndarray, top: int) -> list[dict]:
+    """Top candidates by the combined score, before the Muse Spark check."""
     pool = [p for p in store.searchable_posts() if passes_rules(me, p)]
     if not pool:
         return []
-    mine = store.post_embeddings(post_id)
     mat, owners = store.embeddings([p["id"] for p in pool])
     results = []
     for p in pool:
@@ -145,18 +139,53 @@ def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP,
         r["post"] = p
         results.append(r)
     results.sort(key=lambda r: r["combined"], reverse=True)
-    results = results[:top]
+    return results[:top]
+
+
+def _check(results: list[dict], verdict) -> list[dict]:
+    """Run the Muse Spark check on every candidate and order by its likelihood.
+
+    The checks are independent, so they run together and a search takes about
+    as long as one call."""
+    with ThreadPoolExecutor(max_workers=RERANK_TOP) as pool_:
+        verdicts = list(pool_.map(verdict, results))
+    for r, v in zip(results, verdicts):
+        if v:
+            r["verdict"] = v
+    results.sort(key=lambda r: ("verdict" in r,
+                                r["verdict"]["same_pet_likelihood"] if "verdict" in r else 0,
+                                r["combined"]), reverse=True)
+    return results
+
+
+def find_matches(post_id: int, rerank: bool = True, top: int = RERANK_TOP,
+                 allow_new: bool = True) -> list[dict]:
+    """Ranked candidates for a stored post. With allow_new off, only saved
+    Muse Spark checks are used, so the search makes no paid calls."""
+    me = store.post(post_id)
+    if me is None:
+        return []
+    results = _rank(me, store.post_embeddings(post_id), top)
     if rerank:
-        # The checks are independent, so run them together to keep a search
-        # to the time of one Muse Spark call.
-        with ThreadPoolExecutor(max_workers=RERANK_TOP) as pool_:
-            verdicts = list(pool_.map(lambda r: verdict_for(me, r["post"], allow_new), results))
-        for r, v in zip(results, verdicts):
-            if v:
-                r["verdict"] = v
-        results.sort(key=lambda r: ("verdict" in r,
-                                    r["verdict"]["same_pet_likelihood"] if "verdict" in r else 0,
-                                    r["combined"]), reverse=True)
+        results = _check(results, lambda r: verdict_for(me, r["post"], allow_new))
+    return results
+
+
+def search_upload(me: dict, mine: np.ndarray, my_crops: list[bytes], check: bool = True,
+                  top: int = RERANK_TOP) -> list[dict]:
+    """Ranked candidates for an upload that is never stored. `me` is the
+    post-shaped dict from ingest.prepare_upload, with id -1."""
+    def verdict(r):
+        try:
+            return meta_api.compare_posts(me, r["post"], my_crops, _crop_bytes(r["post"]["id"]))
+        except Exception:
+            # One failed check shouldn't sink the search; that result just
+            # shows without Muse Spark's reasons.
+            return None
+
+    results = _rank(me, mine, top)
+    if check:
+        results = _check(results, verdict)
     return results
 
 

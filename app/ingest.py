@@ -18,6 +18,25 @@ def normalise(image_bytes: bytes) -> bytes:
     return out.getvalue()
 
 
+def prepare_upload(text: str, images: list[bytes], post_type: str) -> tuple[dict, object, list[bytes]]:
+    """Read and embed a visitor's upload without storing anything.
+
+    Returns a post-shaped dict (id -1), its embeddings and the pet crops."""
+    today = datetime.now().date().isoformat()
+    images = [normalise(b) for b in images]
+    fields = meta_api.read_post(text, images, posted=today, today=today)
+    fields["post_type"] = post_type
+    species = fields["species"]
+    crops = [meta_api.crop_pet(img, species)[0] for img in images]
+    vectors = embed.embed(crops)
+    where = geo.locate(fields["location_text"], fields["location_precision"])
+    lat, lon, radius = where if where else (None, None, None)
+    me = {"id": -1, "post_type": post_type, "species": species, "fields": fields,
+          "text": text or "(no details given)", "lat": lat, "lon": lon, "radius_km": radius,
+          "event_date": fields["event_date"] or None}
+    return me, vectors, crops
+
+
 def ingest_post(text: str, images: list[bytes], poster: str, *,
                 post_type: str | None = None, group_id: str | None = None,
                 contact_messenger: str = "", contact_phone: str = "",

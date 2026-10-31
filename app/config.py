@@ -14,17 +14,18 @@ CHAT_MODEL = "muse-spark-1.3"
 SAM_MODEL = "sam-3.1"
 EMBED_APP = "pet-match-embed"
 
+# The one group whose admin opt-in switch the demo shows.
+OPT_IN_DEMO_GROUP = "southgate-buy-sell"
+
 # Prices in dollars, from the Meta Model API pricing page.
 PRICE_INPUT_PER_TOKEN = 1.25 / 1_000_000
 PRICE_OUTPUT_PER_TOKEN = 4.25 / 1_000_000
 PRICE_SAM_PER_IMAGE = 2.50 / 1000
 
-# Limits for the public demo. Only new posts and new match checks cost money.
+# Limits for the public demo. Only searches with an uploaded photo cost money.
 HOSTED = os.environ.get("PET_MATCH_HOSTED") == "1"
-POSTS_PER_VISITOR_PER_DAY = 3
-POSTS_PER_DAY = 60
-NEW_SEARCHES_PER_VISITOR_PER_DAY = 10
-NEW_SEARCHES_PER_DAY = 200
+SEARCHES_PER_VISITOR_PER_DAY = 5
+SEARCHES_PER_DAY = 80
 SPEND_CEILING_USD = float(os.environ.get("PET_MATCH_SPEND_CEILING", "25"))
 MAX_PHOTOS = 4
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
