@@ -114,7 +114,7 @@ function showSearch(kind) {
     const el = document.getElementById("limits");
     if (!el) return;
     el.textContent = l.search_open
-      ? `To keep this public demo affordable, each visitor can run ${l.searches_left_today} more search${l.searches_left_today === 1 ? "" : "es"} today. Need a photo to try? Use Download test photos in the menu.`
+      ? `You have ${l.searches_left_today} search${l.searches_left_today === 1 ? "" : "es"} left today. Each visitor gets 5 a day to keep this public demo affordable. Need a photo to try? Use Download test photos in the menu.`
       : "Searching is paused on this demo for today, but you can still browse nearby posts.";
   }).catch(() => {});
   document.getElementById("search-form").addEventListener("submit", async (e) => {
